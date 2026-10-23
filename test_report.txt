@@ -1,0 +1,15 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.16, pytest-8.4.2, pluggy-1.7.0 -- /usr/bin/python3
+cachedir: .pytest_cache
+rootdir: /content/repo
+plugins: anyio-4.15.1, langsmith-0.14.11, platformdirs-4.13.4, typeguard-4.6.0
+collecting ... collected 6 items
+
+tests/test_bearing_features.py::test_rms_of_sine_is_amplitude_over_root2 PASSED [ 16%]
+tests/test_bearing_features.py::test_kurtosis_of_gaussian_noise_is_about_3 PASSED [ 33%]
+tests/test_bearing_features.py::test_kurtosis_of_constant_signal_is_nan PASSED [ 50%]
+tests/test_bearing_features.py::test_peak_uses_absolute_value PASSED     [ 66%]
+tests/test_bearing_features.py::test_extract_features_on_fake_folder PASSED [ 83%]
+tests/test_bearing_features.py::test_missing_folder_raises PASSED        [100%]
+
+============================== 6 passed in 0.74s ===============================
