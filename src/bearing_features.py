@@ -178,9 +178,15 @@ def extract_features(files, save_to=None):
         raise ValueError("No files given")
     rows = []
     for i, path in enumerate(files):
+        try:
+            data = load_snapshot(path)
+        except ValueError as err:  # truncated or corrupt file: skip it, keep going
+            print(f"Skipped {os.path.basename(path)}: {err}")
+            continue
         row = {"sample": i, "file": os.path.basename(path)}
-        row.update(snapshot_features(load_snapshot(path)))
+        row.update(snapshot_features(data))
         rows.append(row)
+        
     features = pd.DataFrame(rows).set_index("sample")
     if save_to:
         features.to_csv(save_to)
