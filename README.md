@@ -13,7 +13,7 @@ Rolling-element bearings are among the most common causes of failure in rotating
 2. a way to **detect the onset of a fault** and estimate how it progresses.
 
 <!-- TODO: add the stakeholder and why it matters, assumptions, and scope/limitations (e.g. one test rig, constant speed/load) -->
--MAKING CHANGES TESTING
+-MAKING CHANGES TESTING AGAIN
 
 
 ## Data
