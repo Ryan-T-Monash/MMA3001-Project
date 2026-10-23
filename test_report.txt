@@ -12,4 +12,4 @@ tests/test_bearing_features.py::test_peak_uses_absolute_value PASSED     [ 66%]
 tests/test_bearing_features.py::test_extract_features_on_fake_folder PASSED [ 83%]
 tests/test_bearing_features.py::test_missing_folder_raises PASSED        [100%]
 
-============================== 6 passed in 0.55s ===============================
+============================== 6 passed in 0.51s ===============================
