@@ -19,4 +19,4 @@ tests/test_spectrum.py::test_defect_frequencies_match_ims_values PASSED  [ 84%]
 tests/test_spectrum.py::test_sine_gives_peak_at_its_frequency_and_amplitude PASSED [ 92%]
 tests/test_spectrum.py::test_band_peak_ignores_energy_outside_band PASSED [100%]
 
-============================== 13 passed in 0.73s ==============================
+============================== 13 passed in 0.54s ==============================
