@@ -2,21 +2,39 @@
 platform linux -- Python 3.13.16, pytest-8.4.2, pluggy-1.7.0 -- /usr/bin/python3
 cachedir: .pytest_cache
 rootdir: /content/repo
-plugins: anyio-4.15.1, langsmith-0.14.11, platformdirs-4.13.4, typeguard-4.6.0
-collecting ... collected 13 items
+plugins: platformdirs-4.13.5, anyio-4.15.1, typeguard-4.6.0, langsmith-0.14.11
+collecting ... collected 31 items
 
-tests/test_bearing_features.py::test_rms_of_sine_is_amplitude_over_root2 PASSED [  7%]
-tests/test_bearing_features.py::test_kurtosis_of_gaussian_noise_is_about_3 PASSED [ 15%]
-tests/test_bearing_features.py::test_kurtosis_of_constant_signal_is_nan PASSED [ 23%]
-tests/test_bearing_features.py::test_peak_uses_absolute_value PASSED     [ 30%]
-tests/test_bearing_features.py::test_extract_features_on_fake_folder PASSED [ 38%]
-tests/test_bearing_features.py::test_missing_folder_raises PASSED        [ 46%]
-tests/test_data_quality.py::test_time_gaps_finds_one_long_gap PASSED     [ 53%]
-tests/test_data_quality.py::test_clean_snapshot_passes PASSED            [ 61%]
-tests/test_data_quality.py::test_problems_are_detected PASSED            [ 69%]
-tests/test_data_quality.py::test_quality_report_flags_unreadable_file PASSED [ 76%]
-tests/test_spectrum.py::test_defect_frequencies_match_ims_values PASSED  [ 84%]
-tests/test_spectrum.py::test_sine_gives_peak_at_its_frequency_and_amplitude PASSED [ 92%]
-tests/test_spectrum.py::test_band_peak_ignores_energy_outside_band PASSED [100%]
+tests/test_bearing_features.py::test_rms_of_sine_is_amplitude_over_root2 PASSED [  3%]
+tests/test_bearing_features.py::test_kurtosis_of_gaussian_noise_is_about_3 PASSED [  6%]
+tests/test_bearing_features.py::test_kurtosis_of_constant_signal_is_nan PASSED [  9%]
+tests/test_bearing_features.py::test_peak_uses_absolute_value PASSED     [ 12%]
+tests/test_bearing_features.py::test_extract_features_on_fake_folder PASSED [ 16%]
+tests/test_bearing_features.py::test_missing_folder_raises PASSED        [ 19%]
+tests/test_data_quality.py::test_time_gaps_finds_one_long_gap PASSED     [ 22%]
+tests/test_data_quality.py::test_clean_snapshot_passes PASSED            [ 25%]
+tests/test_data_quality.py::test_problems_are_detected PASSED            [ 29%]
+tests/test_data_quality.py::test_quality_report_flags_unreadable_file PASSED [ 32%]
+tests/test_rul_models.py::test_catalogue_life_hand_calculation PASSED    [ 35%]
+tests/test_rul_models.py::test_weibull_conversions_are_consistent PASSED [ 38%]
+tests/test_rul_models.py::test_catalogue_rul_never_negative PASSED       [ 41%]
+tests/test_rul_models.py::test_trailing_mean_uses_no_future_data PASSED  [ 45%]
+tests/test_rul_models.py::test_extrapolation_exact_for_straight_line PASSED [ 48%]
+tests/test_rul_models.py::test_extrapolation_exact_for_exponential_with_log PASSED [ 51%]
+tests/test_rul_models.py::test_extrapolation_flat_trend_gives_cap PASSED [ 54%]
+tests/test_rul_models.py::test_rul_scores PASSED                         [ 58%]
+tests/test_rul_models.py::test_models_beat_mean_baseline_on_learnable_data PASSED [ 61%]
+tests/test_rul_models.py::test_deeper_trees_fit_training_data_better PASSED [ 64%]
+tests/test_rul_models.py::test_tune_and_test_picks_setting_on_validation_only PASSED [ 67%]
+tests/test_rul_models.py::test_tune_fixed_chooses_lowest_validation_error_and_caps PASSED [ 70%]
+tests/test_spectrum.py::test_defect_frequencies_match_ims_values PASSED  [ 74%]
+tests/test_spectrum.py::test_sine_gives_peak_at_its_frequency_and_amplitude PASSED [ 77%]
+tests/test_spectrum.py::test_band_peak_ignores_energy_outside_band PASSED [ 80%]
+tests/test_splits.py::test_time_split_is_in_order_with_right_sizes[ratios0] PASSED [ 83%]
+tests/test_splits.py::test_time_split_is_in_order_with_right_sizes[ratios1] PASSED [ 87%]
+tests/test_splits.py::test_time_split_is_in_order_with_right_sizes[ratios2] PASSED [ 90%]
+tests/test_splits.py::test_interleaved_split_repeats_pattern PASSED      [ 93%]
+tests/test_splits.py::test_block_split_keeps_blocks_whole_and_gaps_changes PASSED [ 96%]
+tests/test_splits.py::test_block_split_seed_changes_assignment PASSED    [100%]
 
-============================== 13 passed in 0.54s ==============================
+============================== 31 passed in 2.02s ==============================
