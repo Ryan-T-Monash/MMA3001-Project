@@ -1,4 +1,4 @@
 ,original,selected,speed_up
-features per snapshot (ms),17.991,4.581,3.927
-rebuild all features (s),79.146,65.951,1.2
-"extrapolation, 1 setting (ms)",80.256,0.173,463.881
+features per snapshot (ms),3.907,3.044,1.283
+rebuild all features (s),19.605,18.756,1.045
+"extrapolation, 1 setting (ms)",85.777,0.195,439.703
