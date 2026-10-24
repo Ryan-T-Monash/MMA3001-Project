@@ -1,8 +1,8 @@
 model,MAE_blocks,MAE_blocks_std,RMSE_blocks,late_blocks_pct,MAE_time,MAE_every 10,better_than_L10_pct,better_than_Dummy_pct,ms_per_setting,settings_tried,usual_choice,interpretability
-SVR,7.8,3.92,9.15,36.68,79.83,3.9,99.45,83.45,35.59,16.0,"smooth=96, C=1000",black box
-tree,7.9,0.98,9.88,33.41,49.08,1.9,99.44,83.24,2.95,28.0,"smooth=96, max_depth=6",readable if shallow
-linear,30.09,6.92,33.28,46.13,14.76,21.57,97.86,36.17,2.7,4.0,smooth=96,2 coefficients
-trend extrapolation,43.14,17.2,53.76,73.95,50.96,40.86,96.93,8.48,0.25,60.0,"settings=(1, 2, 2)",physical: RMS line to threshold
-mean (Dummy),47.14,11.6,53.96,32.3,98.33,40.83,96.65,0.0,0.94,1.0,smooth=1,constant
+SVR,7.8,3.92,9.15,36.68,79.83,3.9,99.45,83.45,18.84,16.0,"smooth=96, C=1000",black box
+tree,7.9,0.98,9.88,33.41,49.08,1.9,99.44,83.24,1.52,28.0,"smooth=96, max_depth=6",readable if shallow
+linear,30.09,6.92,33.28,46.13,14.76,21.57,97.86,36.17,1.64,4.0,smooth=96,2 coefficients
+trend extrapolation,43.14,17.2,53.76,73.95,50.96,40.86,96.93,8.48,0.39,60.0,"settings=(1, 2, 2)",physical: RMS line to threshold
+mean (Dummy),47.14,11.6,53.96,32.3,98.33,40.83,96.65,0.0,1.11,1.0,smooth=1,constant
 catalogue L10,1407.03,0.0,1407.03,100.0,1407.03,1407.03,0.0,-2884.91,0.0,1.0,settings=L10,"formula, no data"
 catalogue L50,5351.5,0.0,5351.5,100.0,5351.5,5351.5,-280.34,-11252.75,0.0,1.0,settings=L50,"formula, no data"
