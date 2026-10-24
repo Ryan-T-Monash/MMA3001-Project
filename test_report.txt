@@ -37,4 +37,4 @@ tests/test_splits.py::test_interleaved_split_repeats_pattern PASSED      [ 93%]
 tests/test_splits.py::test_block_split_keeps_blocks_whole_and_gaps_changes PASSED [ 96%]
 tests/test_splits.py::test_block_split_seed_changes_assignment PASSED    [100%]
 
-============================== 31 passed in 2.11s ==============================
+============================== 31 passed in 1.29s ==============================
