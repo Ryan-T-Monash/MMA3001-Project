@@ -1,5 +1,5 @@
 """
-Remaining useful life (RUL) models for bearing 1 of IMS test 2, and the
+Remaining useful life (RUL) models for the IMS bearings, and the
 baseline they are all compared against.
 
 Engineering question: *how many hours does this bearing have left?*

@@ -161,7 +161,7 @@ Run the cells **in order, top to bottom**. Most cells use variables made by earl
 | | 13 to 16 | Test 1 features (read from `data/`, rebuilt from raw files only if missing), unseen-bearing test, `data/rul_results_unseen_bearing.csv` |
 | | 17 to 18 | Train on two bearings, test on the third, `data/rul_results_leave_one_bearing_out.csv` |
 | | 19 | Safety margin against late predictions, `data/rul_safety_margin.csv` |
-| | 20 to 22 | Test 3 as a fourth bearing (needs Main section 2b once): train on three, test on the fourth, `data/rul_results_four_bearings.csv`, `data/rul_training_bearings_summary_4.csv` |
+| | 20 to 22 | Test 3 as a fourth bearing (needs `data/features_3rd_test.csv`, already in the repo; to rebuild it, put NASA's `IMS.zip` in `PROJECT` and run Main cell T3, about 10 min): train on three, test on the fourth, `data/rul_results_four_bearings.csv`, `data/rul_training_bearings_summary_4.csv` |
 
 All tunable settings (smoothing windows, tree depths, SVR C, extrapolation windows, failure thresholds, split ratio, seeds) are in **cell 2** of `Data Analysis.ipynb`.
 
@@ -196,7 +196,7 @@ Values are mean absolute error in hours. Unseen-bearing columns cover the final 
 ## Limitations
 
 - Only four failure histories, with three fault types. With one training bearing, no model beat the Dummy on new bearings.
-- 75 to 90% of predictions on new bearings are late. A safety margin is needed before any real use.
+- 75 to 97% of predictions on new bearings are late. A safety margin is needed before any real use.
 - Bearings under identical conditions lived 164 h and about 830 h. A model trained only on long lives over-predicts short ones.
 - Fixed speed and load; failure time is taken as the end of each test.
 
