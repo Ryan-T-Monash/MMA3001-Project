@@ -1,0 +1,8 @@
+model,"1 training bearing (test 1, last 164 h)","2 training bearings (test 1, last 164 h)","2 training bearings (test 2 b1, whole run)","late %, 2 bearings (mean, last 164 h)"
+SVR,37.0,61.71,434.11,79.85
+catalogue L10,743.31,743.31,1407.03,100.0
+catalogue L50,4687.77,4687.77,5351.5,100.0
+linear,38.31,134.48,334.07,90.09
+mean (Dummy),34.87,159.15,235.82,100.0
+tree,43.11,90.19,441.88,75.15
+trend extrapolation,68.25,388.37,347.4,68.69

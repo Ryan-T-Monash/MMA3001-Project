@@ -500,3 +500,87 @@ def fixed_validation_curve(predictions, y, roles, names, cap=True):
     return pd.DataFrame([{**dict(zip(names, k)),
                           "val_MAE_h": np.mean(np.abs(np.minimum(p[va], limit) - y[va]))}
                          for k, p in predictions.items()])
+
+
+def leave_one_out_by_group(make_model, grid, features, y, test_group, clip=True):
+    """Train on every group but one, choose settings by inner swaps, test on the one left out.
+
+    A group is one bearing's run to failure. Settings are chosen without the
+    test bearing: each training bearing in turn is held out for validation
+    while the model is fitted on the others, and the setting with the lowest
+    mean validation MAE wins. That setting is refitted on all training
+    bearings and scored once on the test bearing.
+
+    Parameters
+    ----------
+    make_model : callable
+        ``make_model(**settings)`` returns an unfitted estimator.
+    grid : list of dict
+        Candidate settings, each with a ``"smooth"`` key (see `tune_and_test`).
+    features : dict
+        Group -> {smoothing window -> feature matrix of that group}.
+    y : dict
+        Group -> true RUL (hours) of that group.
+    test_group : hashable
+        The group scored at the end.
+    clip : bool, optional
+        Keep predictions between 0 and the longest RUL in the fitting data.
+
+    Returns
+    -------
+    dict
+        Chosen settings, ``val_MAE_h`` and the test scores from `rul_scores`.
+    numpy.ndarray
+        Predicted RUL for the test group.
+    """
+    train = [g for g in features if g != test_group]
+
+    def fit_predict(settings, fit_groups, predict_group):
+        kwargs = {k: v for k, v in settings.items() if k != "smooth"}
+        sw = settings["smooth"]
+        X = np.vstack([features[g][sw] for g in fit_groups])
+        target = np.concatenate([np.asarray(y[g], dtype=float) for g in fit_groups])
+        pred = make_model(**kwargs).fit(X, target).predict(features[predict_group][sw])
+        return np.clip(pred, 0, target.max()) if clip else pred
+
+    best = None
+    for settings in grid:
+        val_mae = np.mean([np.mean(np.abs(fit_predict(settings, [g for g in train if g != v], v)
+                                          - np.asarray(y[v], dtype=float)))
+                           for v in train])
+        if best is None or val_mae < best[0]:
+            best = (val_mae, settings)
+    val_mae, settings = best
+    pred = fit_predict(settings, train, test_group)
+    return {**settings, "val_MAE_h": val_mae, **rul_scores(y[test_group], pred)}, pred
+
+
+def fixed_leave_one_out_by_group(predictions, y, test_group, cap=True):
+    """`leave_one_out_by_group` for methods that need no fitting.
+
+    Parameters
+    ----------
+    predictions : dict
+        Settings -> {group -> predicted RUL of that group}.
+    y : dict
+        Group -> true RUL (hours).
+    test_group : hashable
+        The group scored at the end.
+    cap : bool, optional
+        Limit predictions to the longest RUL among the training groups.
+
+    Returns
+    -------
+    dict
+        ``settings``, ``val_MAE_h`` (mean over training groups) and test scores.
+    numpy.ndarray
+        Predicted RUL for the test group.
+    """
+    train = [g for g in y if g != test_group]
+    limit = max(np.max(y[g]) for g in train) if cap else np.inf
+    val_mae = {k: np.mean([np.mean(np.abs(np.minimum(p[g], limit) - np.asarray(y[g], dtype=float)))
+                           for g in train])
+               for k, p in predictions.items()}
+    key = min(val_mae, key=val_mae.get)
+    pred = np.minimum(predictions[key][test_group], limit)
+    return {"settings": key, "val_MAE_h": val_mae[key], **rul_scores(y[test_group], pred)}, pred
