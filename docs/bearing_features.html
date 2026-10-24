@@ -73,6 +73,9 @@
                     <a class="function" href="#snapshot_features">snapshot_features</a>
             </li>
             <li>
+                    <a class="function" href="#snapshot_features_fast">snapshot_features_fast</a>
+            </li>
+            <li>
                     <a class="function" href="#extract_features">extract_features</a>
             </li>
     </ul>
@@ -273,44 +276,83 @@ features = extract_features(files)
 </span><span id="L-153"><a href="#L-153"><span class="linenos">153</span></a>    <span class="k">return</span> <span class="n">row</span>
 </span><span id="L-154"><a href="#L-154"><span class="linenos">154</span></a>
 </span><span id="L-155"><a href="#L-155"><span class="linenos">155</span></a>
-</span><span id="L-156"><a href="#L-156"><span class="linenos">156</span></a><span class="k">def</span><span class="w"> </span><span class="nf">extract_features</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">save_to</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-</span><span id="L-157"><a href="#L-157"><span class="linenos">157</span></a><span class="w">    </span><span class="sd">"""Build a feature table from a list of snapshot files.</span>
+</span><span id="L-156"><a href="#L-156"><span class="linenos">156</span></a><span class="k">def</span><span class="w"> </span><span class="nf">snapshot_features_fast</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+</span><span id="L-157"><a href="#L-157"><span class="linenos">157</span></a><span class="w">    </span><span class="sd">"""Vectorised `snapshot_features`: same keys and values, about 2x faster.</span>
 </span><span id="L-158"><a href="#L-158"><span class="linenos">158</span></a>
-</span><span id="L-159"><a href="#L-159"><span class="linenos">159</span></a><span class="sd">    Parameters</span>
-</span><span id="L-160"><a href="#L-160"><span class="linenos">160</span></a><span class="sd">    ----------</span>
-</span><span id="L-161"><a href="#L-161"><span class="linenos">161</span></a><span class="sd">    files : list of str</span>
-</span><span id="L-162"><a href="#L-162"><span class="linenos">162</span></a><span class="sd">        Snapshot paths in time order, e.g. from `list_snapshot_files`.</span>
-</span><span id="L-163"><a href="#L-163"><span class="linenos">163</span></a><span class="sd">    save_to : str, optional</span>
-</span><span id="L-164"><a href="#L-164"><span class="linenos">164</span></a><span class="sd">        If given, the table is also written to this CSV path.</span>
-</span><span id="L-165"><a href="#L-165"><span class="linenos">165</span></a>
-</span><span id="L-166"><a href="#L-166"><span class="linenos">166</span></a><span class="sd">    Returns</span>
-</span><span id="L-167"><a href="#L-167"><span class="linenos">167</span></a><span class="sd">    -------</span>
-</span><span id="L-168"><a href="#L-168"><span class="linenos">168</span></a><span class="sd">    pandas.DataFrame</span>
-</span><span id="L-169"><a href="#L-169"><span class="linenos">169</span></a><span class="sd">        One row per snapshot, indexed by ``sample`` (0, 1, 2, ...), with a</span>
-</span><span id="L-170"><a href="#L-170"><span class="linenos">170</span></a><span class="sd">        ``file`` column and the feature columns from `snapshot_features`.</span>
-</span><span id="L-171"><a href="#L-171"><span class="linenos">171</span></a>
-</span><span id="L-172"><a href="#L-172"><span class="linenos">172</span></a><span class="sd">    Raises</span>
-</span><span id="L-173"><a href="#L-173"><span class="linenos">173</span></a><span class="sd">    ------</span>
-</span><span id="L-174"><a href="#L-174"><span class="linenos">174</span></a><span class="sd">    ValueError</span>
-</span><span id="L-175"><a href="#L-175"><span class="linenos">175</span></a><span class="sd">        If `files` is empty.</span>
-</span><span id="L-176"><a href="#L-176"><span class="linenos">176</span></a><span class="sd">    """</span>
-</span><span id="L-177"><a href="#L-177"><span class="linenos">177</span></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">files</span><span class="p">:</span>
-</span><span id="L-178"><a href="#L-178"><span class="linenos">178</span></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"No files given"</span><span class="p">)</span>
-</span><span id="L-179"><a href="#L-179"><span class="linenos">179</span></a>    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span id="L-180"><a href="#L-180"><span class="linenos">180</span></a>    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">files</span><span class="p">):</span>
-</span><span id="L-181"><a href="#L-181"><span class="linenos">181</span></a>        <span class="k">try</span><span class="p">:</span>
-</span><span id="L-182"><a href="#L-182"><span class="linenos">182</span></a>            <span class="n">data</span> <span class="o">=</span> <span class="n">load_snapshot</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span id="L-183"><a href="#L-183"><span class="linenos">183</span></a>        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>  <span class="c1"># truncated or corrupt file: skip it, keep going</span>
-</span><span id="L-184"><a href="#L-184"><span class="linenos">184</span></a>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Skipped </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-</span><span id="L-185"><a href="#L-185"><span class="linenos">185</span></a>            <span class="k">continue</span>
-</span><span id="L-186"><a href="#L-186"><span class="linenos">186</span></a>        <span class="n">row</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"sample"</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span> <span class="s2">"file"</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">)}</span>
-</span><span id="L-187"><a href="#L-187"><span class="linenos">187</span></a>        <span class="n">row</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">snapshot_features</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
-</span><span id="L-188"><a href="#L-188"><span class="linenos">188</span></a>        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
-</span><span id="L-189"><a href="#L-189"><span class="linenos">189</span></a>        
-</span><span id="L-190"><a href="#L-190"><span class="linenos">190</span></a>    <span class="n">features</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">"sample"</span><span class="p">)</span>
-</span><span id="L-191"><a href="#L-191"><span class="linenos">191</span></a>    <span class="k">if</span> <span class="n">save_to</span><span class="p">:</span>
-</span><span id="L-192"><a href="#L-192"><span class="linenos">192</span></a>        <span class="n">features</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">save_to</span><span class="p">)</span>
-</span><span id="L-193"><a href="#L-193"><span class="linenos">193</span></a>    <span class="k">return</span> <span class="n">features</span>
+</span><span id="L-159"><a href="#L-159"><span class="linenos">159</span></a><span class="sd">    All channels are processed in one NumPy call per statistic (no Python</span>
+</span><span id="L-160"><a href="#L-160"><span class="linenos">160</span></a><span class="sd">    loop over channels), and the fourth power is formed as ``c2 * c2``</span>
+</span><span id="L-161"><a href="#L-161"><span class="linenos">161</span></a><span class="sd">    instead of ``c ** 4``, which avoids the slower general power routine.</span>
+</span><span id="L-162"><a href="#L-162"><span class="linenos">162</span></a><span class="sd">    `snapshot_features` is kept as the readable reference that the tests</span>
+</span><span id="L-163"><a href="#L-163"><span class="linenos">163</span></a><span class="sd">    compare against.</span>
+</span><span id="L-164"><a href="#L-164"><span class="linenos">164</span></a>
+</span><span id="L-165"><a href="#L-165"><span class="linenos">165</span></a><span class="sd">    Parameters</span>
+</span><span id="L-166"><a href="#L-166"><span class="linenos">166</span></a><span class="sd">    ----------</span>
+</span><span id="L-167"><a href="#L-167"><span class="linenos">167</span></a><span class="sd">    data : numpy.ndarray</span>
+</span><span id="L-168"><a href="#L-168"><span class="linenos">168</span></a><span class="sd">        2-D array of shape (n_samples, n_channels), as from `load_snapshot`.</span>
+</span><span id="L-169"><a href="#L-169"><span class="linenos">169</span></a>
+</span><span id="L-170"><a href="#L-170"><span class="linenos">170</span></a><span class="sd">    Returns</span>
+</span><span id="L-171"><a href="#L-171"><span class="linenos">171</span></a><span class="sd">    -------</span>
+</span><span id="L-172"><a href="#L-172"><span class="linenos">172</span></a><span class="sd">    dict</span>
+</span><span id="L-173"><a href="#L-173"><span class="linenos">173</span></a><span class="sd">        Keys ``rms_k``, ``kurtosis_k``, ``peak_k`` for channel k = 1..n_channels.</span>
+</span><span id="L-174"><a href="#L-174"><span class="linenos">174</span></a><span class="sd">    """</span>
+</span><span id="L-175"><a href="#L-175"><span class="linenos">175</span></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+</span><span id="L-176"><a href="#L-176"><span class="linenos">176</span></a>    <span class="n">rms_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">data</span> <span class="o">*</span> <span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+</span><span id="L-177"><a href="#L-177"><span class="linenos">177</span></a>    <span class="n">c</span> <span class="o">=</span> <span class="n">data</span> <span class="o">-</span> <span class="n">data</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="L-178"><a href="#L-178"><span class="linenos">178</span></a>    <span class="n">c2</span> <span class="o">=</span> <span class="n">c</span> <span class="o">*</span> <span class="n">c</span>
+</span><span id="L-179"><a href="#L-179"><span class="linenos">179</span></a>    <span class="n">var</span> <span class="o">=</span> <span class="n">c2</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="L-180"><a href="#L-180"><span class="linenos">180</span></a>    <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">):</span>
+</span><span id="L-181"><a href="#L-181"><span class="linenos">181</span></a>        <span class="n">kurt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">var</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="p">(</span><span class="n">c2</span> <span class="o">*</span> <span class="n">c2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">var</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># NaN if constant</span>
+</span><span id="L-182"><a href="#L-182"><span class="linenos">182</span></a>    <span class="n">peak_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="L-183"><a href="#L-183"><span class="linenos">183</span></a>    <span class="n">row</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span id="L-184"><a href="#L-184"><span class="linenos">184</span></a>    <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+</span><span id="L-185"><a href="#L-185"><span class="linenos">185</span></a>        <span class="n">row</span><span class="p">[</span><span class="sa">f</span><span class="s2">"rms_</span><span class="si">{</span><span class="n">ch</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">rms_</span><span class="p">[</span><span class="n">ch</span><span class="p">])</span>
+</span><span id="L-186"><a href="#L-186"><span class="linenos">186</span></a>        <span class="n">row</span><span class="p">[</span><span class="sa">f</span><span class="s2">"kurtosis_</span><span class="si">{</span><span class="n">ch</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">kurt</span><span class="p">[</span><span class="n">ch</span><span class="p">])</span>
+</span><span id="L-187"><a href="#L-187"><span class="linenos">187</span></a>        <span class="n">row</span><span class="p">[</span><span class="sa">f</span><span class="s2">"peak_</span><span class="si">{</span><span class="n">ch</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">peak_</span><span class="p">[</span><span class="n">ch</span><span class="p">])</span>
+</span><span id="L-188"><a href="#L-188"><span class="linenos">188</span></a>    <span class="k">return</span> <span class="n">row</span>
+</span><span id="L-189"><a href="#L-189"><span class="linenos">189</span></a>
+</span><span id="L-190"><a href="#L-190"><span class="linenos">190</span></a>
+</span><span id="L-191"><a href="#L-191"><span class="linenos">191</span></a><span class="k">def</span><span class="w"> </span><span class="nf">extract_features</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">save_to</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+</span><span id="L-192"><a href="#L-192"><span class="linenos">192</span></a><span class="w">    </span><span class="sd">"""Build a feature table from a list of snapshot files.</span>
+</span><span id="L-193"><a href="#L-193"><span class="linenos">193</span></a>
+</span><span id="L-194"><a href="#L-194"><span class="linenos">194</span></a><span class="sd">    Parameters</span>
+</span><span id="L-195"><a href="#L-195"><span class="linenos">195</span></a><span class="sd">    ----------</span>
+</span><span id="L-196"><a href="#L-196"><span class="linenos">196</span></a><span class="sd">    files : list of str</span>
+</span><span id="L-197"><a href="#L-197"><span class="linenos">197</span></a><span class="sd">        Snapshot paths in time order, e.g. from `list_snapshot_files`.</span>
+</span><span id="L-198"><a href="#L-198"><span class="linenos">198</span></a><span class="sd">    save_to : str, optional</span>
+</span><span id="L-199"><a href="#L-199"><span class="linenos">199</span></a><span class="sd">        If given, the table is also written to this CSV path.</span>
+</span><span id="L-200"><a href="#L-200"><span class="linenos">200</span></a>
+</span><span id="L-201"><a href="#L-201"><span class="linenos">201</span></a><span class="sd">    Returns</span>
+</span><span id="L-202"><a href="#L-202"><span class="linenos">202</span></a><span class="sd">    -------</span>
+</span><span id="L-203"><a href="#L-203"><span class="linenos">203</span></a><span class="sd">    pandas.DataFrame</span>
+</span><span id="L-204"><a href="#L-204"><span class="linenos">204</span></a><span class="sd">        One row per snapshot, indexed by ``sample`` (0, 1, 2, ...), with a</span>
+</span><span id="L-205"><a href="#L-205"><span class="linenos">205</span></a><span class="sd">        ``file`` column and the feature columns from `snapshot_features`.</span>
+</span><span id="L-206"><a href="#L-206"><span class="linenos">206</span></a>
+</span><span id="L-207"><a href="#L-207"><span class="linenos">207</span></a><span class="sd">    Raises</span>
+</span><span id="L-208"><a href="#L-208"><span class="linenos">208</span></a><span class="sd">    ------</span>
+</span><span id="L-209"><a href="#L-209"><span class="linenos">209</span></a><span class="sd">    ValueError</span>
+</span><span id="L-210"><a href="#L-210"><span class="linenos">210</span></a><span class="sd">        If `files` is empty.</span>
+</span><span id="L-211"><a href="#L-211"><span class="linenos">211</span></a>
+</span><span id="L-212"><a href="#L-212"><span class="linenos">212</span></a><span class="sd">    Notes</span>
+</span><span id="L-213"><a href="#L-213"><span class="linenos">213</span></a><span class="sd">    -----</span>
+</span><span id="L-214"><a href="#L-214"><span class="linenos">214</span></a><span class="sd">    Files that cannot be read (e.g. truncated during download) are skipped</span>
+</span><span id="L-215"><a href="#L-215"><span class="linenos">215</span></a><span class="sd">    with a printed message, so their ``sample`` numbers are missing.</span>
+</span><span id="L-216"><a href="#L-216"><span class="linenos">216</span></a><span class="sd">    """</span>
+</span><span id="L-217"><a href="#L-217"><span class="linenos">217</span></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">files</span><span class="p">:</span>
+</span><span id="L-218"><a href="#L-218"><span class="linenos">218</span></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"No files given"</span><span class="p">)</span>
+</span><span id="L-219"><a href="#L-219"><span class="linenos">219</span></a>    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="L-220"><a href="#L-220"><span class="linenos">220</span></a>    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">files</span><span class="p">):</span>
+</span><span id="L-221"><a href="#L-221"><span class="linenos">221</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="L-222"><a href="#L-222"><span class="linenos">222</span></a>            <span class="n">data</span> <span class="o">=</span> <span class="n">load_snapshot</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span id="L-223"><a href="#L-223"><span class="linenos">223</span></a>        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>  <span class="c1"># truncated or corrupt file: skip it, keep going</span>
+</span><span id="L-224"><a href="#L-224"><span class="linenos">224</span></a>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Skipped </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="L-225"><a href="#L-225"><span class="linenos">225</span></a>            <span class="k">continue</span>
+</span><span id="L-226"><a href="#L-226"><span class="linenos">226</span></a>        <span class="n">row</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"sample"</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span> <span class="s2">"file"</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">)}</span>
+</span><span id="L-227"><a href="#L-227"><span class="linenos">227</span></a>        <span class="n">row</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">snapshot_features_fast</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+</span><span id="L-228"><a href="#L-228"><span class="linenos">228</span></a>        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+</span><span id="L-229"><a href="#L-229"><span class="linenos">229</span></a>    <span class="n">features</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">"sample"</span><span class="p">)</span>
+</span><span id="L-230"><a href="#L-230"><span class="linenos">230</span></a>    <span class="k">if</span> <span class="n">save_to</span><span class="p">:</span>
+</span><span id="L-231"><a href="#L-231"><span class="linenos">231</span></a>        <span class="n">features</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">save_to</span><span class="p">)</span>
+</span><span id="L-232"><a href="#L-232"><span class="linenos">232</span></a>    <span class="k">return</span> <span class="n">features</span>
 </span></pre></div>
 
 
@@ -620,6 +662,74 @@ features = extract_features(files)
 
 
                 </section>
+                <section id="snapshot_features_fast">
+                            <input id="snapshot_features_fast-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">snapshot_features_fast</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">data</span></span><span class="return-annotation">):</span></span>
+
+                <label class="view-source-button" for="snapshot_features_fast-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#snapshot_features_fast"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="snapshot_features_fast-157"><a href="#snapshot_features_fast-157"><span class="linenos">157</span></a><span class="k">def</span><span class="w"> </span><span class="nf">snapshot_features_fast</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+</span><span id="snapshot_features_fast-158"><a href="#snapshot_features_fast-158"><span class="linenos">158</span></a><span class="w">    </span><span class="sd">"""Vectorised `snapshot_features`: same keys and values, about 2x faster.</span>
+</span><span id="snapshot_features_fast-159"><a href="#snapshot_features_fast-159"><span class="linenos">159</span></a>
+</span><span id="snapshot_features_fast-160"><a href="#snapshot_features_fast-160"><span class="linenos">160</span></a><span class="sd">    All channels are processed in one NumPy call per statistic (no Python</span>
+</span><span id="snapshot_features_fast-161"><a href="#snapshot_features_fast-161"><span class="linenos">161</span></a><span class="sd">    loop over channels), and the fourth power is formed as ``c2 * c2``</span>
+</span><span id="snapshot_features_fast-162"><a href="#snapshot_features_fast-162"><span class="linenos">162</span></a><span class="sd">    instead of ``c ** 4``, which avoids the slower general power routine.</span>
+</span><span id="snapshot_features_fast-163"><a href="#snapshot_features_fast-163"><span class="linenos">163</span></a><span class="sd">    `snapshot_features` is kept as the readable reference that the tests</span>
+</span><span id="snapshot_features_fast-164"><a href="#snapshot_features_fast-164"><span class="linenos">164</span></a><span class="sd">    compare against.</span>
+</span><span id="snapshot_features_fast-165"><a href="#snapshot_features_fast-165"><span class="linenos">165</span></a>
+</span><span id="snapshot_features_fast-166"><a href="#snapshot_features_fast-166"><span class="linenos">166</span></a><span class="sd">    Parameters</span>
+</span><span id="snapshot_features_fast-167"><a href="#snapshot_features_fast-167"><span class="linenos">167</span></a><span class="sd">    ----------</span>
+</span><span id="snapshot_features_fast-168"><a href="#snapshot_features_fast-168"><span class="linenos">168</span></a><span class="sd">    data : numpy.ndarray</span>
+</span><span id="snapshot_features_fast-169"><a href="#snapshot_features_fast-169"><span class="linenos">169</span></a><span class="sd">        2-D array of shape (n_samples, n_channels), as from `load_snapshot`.</span>
+</span><span id="snapshot_features_fast-170"><a href="#snapshot_features_fast-170"><span class="linenos">170</span></a>
+</span><span id="snapshot_features_fast-171"><a href="#snapshot_features_fast-171"><span class="linenos">171</span></a><span class="sd">    Returns</span>
+</span><span id="snapshot_features_fast-172"><a href="#snapshot_features_fast-172"><span class="linenos">172</span></a><span class="sd">    -------</span>
+</span><span id="snapshot_features_fast-173"><a href="#snapshot_features_fast-173"><span class="linenos">173</span></a><span class="sd">    dict</span>
+</span><span id="snapshot_features_fast-174"><a href="#snapshot_features_fast-174"><span class="linenos">174</span></a><span class="sd">        Keys ``rms_k``, ``kurtosis_k``, ``peak_k`` for channel k = 1..n_channels.</span>
+</span><span id="snapshot_features_fast-175"><a href="#snapshot_features_fast-175"><span class="linenos">175</span></a><span class="sd">    """</span>
+</span><span id="snapshot_features_fast-176"><a href="#snapshot_features_fast-176"><span class="linenos">176</span></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+</span><span id="snapshot_features_fast-177"><a href="#snapshot_features_fast-177"><span class="linenos">177</span></a>    <span class="n">rms_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">data</span> <span class="o">*</span> <span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+</span><span id="snapshot_features_fast-178"><a href="#snapshot_features_fast-178"><span class="linenos">178</span></a>    <span class="n">c</span> <span class="o">=</span> <span class="n">data</span> <span class="o">-</span> <span class="n">data</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="snapshot_features_fast-179"><a href="#snapshot_features_fast-179"><span class="linenos">179</span></a>    <span class="n">c2</span> <span class="o">=</span> <span class="n">c</span> <span class="o">*</span> <span class="n">c</span>
+</span><span id="snapshot_features_fast-180"><a href="#snapshot_features_fast-180"><span class="linenos">180</span></a>    <span class="n">var</span> <span class="o">=</span> <span class="n">c2</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="snapshot_features_fast-181"><a href="#snapshot_features_fast-181"><span class="linenos">181</span></a>    <span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">errstate</span><span class="p">(</span><span class="n">divide</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">,</span> <span class="n">invalid</span><span class="o">=</span><span class="s2">"ignore"</span><span class="p">):</span>
+</span><span id="snapshot_features_fast-182"><a href="#snapshot_features_fast-182"><span class="linenos">182</span></a>        <span class="n">kurt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">var</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="p">(</span><span class="n">c2</span> <span class="o">*</span> <span class="n">c2</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">/</span> <span class="n">var</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># NaN if constant</span>
+</span><span id="snapshot_features_fast-183"><a href="#snapshot_features_fast-183"><span class="linenos">183</span></a>    <span class="n">peak_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span id="snapshot_features_fast-184"><a href="#snapshot_features_fast-184"><span class="linenos">184</span></a>    <span class="n">row</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span id="snapshot_features_fast-185"><a href="#snapshot_features_fast-185"><span class="linenos">185</span></a>    <span class="k">for</span> <span class="n">ch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+</span><span id="snapshot_features_fast-186"><a href="#snapshot_features_fast-186"><span class="linenos">186</span></a>        <span class="n">row</span><span class="p">[</span><span class="sa">f</span><span class="s2">"rms_</span><span class="si">{</span><span class="n">ch</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">rms_</span><span class="p">[</span><span class="n">ch</span><span class="p">])</span>
+</span><span id="snapshot_features_fast-187"><a href="#snapshot_features_fast-187"><span class="linenos">187</span></a>        <span class="n">row</span><span class="p">[</span><span class="sa">f</span><span class="s2">"kurtosis_</span><span class="si">{</span><span class="n">ch</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">kurt</span><span class="p">[</span><span class="n">ch</span><span class="p">])</span>
+</span><span id="snapshot_features_fast-188"><a href="#snapshot_features_fast-188"><span class="linenos">188</span></a>        <span class="n">row</span><span class="p">[</span><span class="sa">f</span><span class="s2">"peak_</span><span class="si">{</span><span class="n">ch</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">"</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">peak_</span><span class="p">[</span><span class="n">ch</span><span class="p">])</span>
+</span><span id="snapshot_features_fast-189"><a href="#snapshot_features_fast-189"><span class="linenos">189</span></a>    <span class="k">return</span> <span class="n">row</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Vectorised <code><a href="#snapshot_features">snapshot_features</a></code>: same keys and values, about 2x faster.</p>
+
+<p>All channels are processed in one NumPy call per statistic (no Python
+loop over channels), and the fourth power is formed as <code>c2 * c2</code>
+instead of <code>c ** 4</code>, which avoids the slower general power routine.
+<code><a href="#snapshot_features">snapshot_features</a></code> is kept as the readable reference that the tests
+compare against.</p>
+
+<h2 id="parameters">Parameters</h2>
+
+<p>data : numpy.ndarray
+    2-D array of shape (n_samples, n_channels), as from <code><a href="#load_snapshot">load_snapshot</a></code>.</p>
+
+<h2 id="returns">Returns</h2>
+
+<p>dict
+    Keys <code>rms_k</code>, <code>kurtosis_k</code>, <code>peak_k</code> for channel k = 1..n_channels.</p>
+</div>
+
+
+                </section>
                 <section id="extract_features">
                             <input id="extract_features-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
 <div class="attr function">
@@ -631,44 +741,48 @@ features = extract_features(files)
 
     </div>
     <a class="headerlink" href="#extract_features"></a>
-            <div class="pdoc-code codehilite"><pre><span></span><span id="extract_features-157"><a href="#extract_features-157"><span class="linenos">157</span></a><span class="k">def</span><span class="w"> </span><span class="nf">extract_features</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">save_to</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-</span><span id="extract_features-158"><a href="#extract_features-158"><span class="linenos">158</span></a><span class="w">    </span><span class="sd">"""Build a feature table from a list of snapshot files.</span>
-</span><span id="extract_features-159"><a href="#extract_features-159"><span class="linenos">159</span></a>
-</span><span id="extract_features-160"><a href="#extract_features-160"><span class="linenos">160</span></a><span class="sd">    Parameters</span>
-</span><span id="extract_features-161"><a href="#extract_features-161"><span class="linenos">161</span></a><span class="sd">    ----------</span>
-</span><span id="extract_features-162"><a href="#extract_features-162"><span class="linenos">162</span></a><span class="sd">    files : list of str</span>
-</span><span id="extract_features-163"><a href="#extract_features-163"><span class="linenos">163</span></a><span class="sd">        Snapshot paths in time order, e.g. from `list_snapshot_files`.</span>
-</span><span id="extract_features-164"><a href="#extract_features-164"><span class="linenos">164</span></a><span class="sd">    save_to : str, optional</span>
-</span><span id="extract_features-165"><a href="#extract_features-165"><span class="linenos">165</span></a><span class="sd">        If given, the table is also written to this CSV path.</span>
-</span><span id="extract_features-166"><a href="#extract_features-166"><span class="linenos">166</span></a>
-</span><span id="extract_features-167"><a href="#extract_features-167"><span class="linenos">167</span></a><span class="sd">    Returns</span>
-</span><span id="extract_features-168"><a href="#extract_features-168"><span class="linenos">168</span></a><span class="sd">    -------</span>
-</span><span id="extract_features-169"><a href="#extract_features-169"><span class="linenos">169</span></a><span class="sd">    pandas.DataFrame</span>
-</span><span id="extract_features-170"><a href="#extract_features-170"><span class="linenos">170</span></a><span class="sd">        One row per snapshot, indexed by ``sample`` (0, 1, 2, ...), with a</span>
-</span><span id="extract_features-171"><a href="#extract_features-171"><span class="linenos">171</span></a><span class="sd">        ``file`` column and the feature columns from `snapshot_features`.</span>
-</span><span id="extract_features-172"><a href="#extract_features-172"><span class="linenos">172</span></a>
-</span><span id="extract_features-173"><a href="#extract_features-173"><span class="linenos">173</span></a><span class="sd">    Raises</span>
-</span><span id="extract_features-174"><a href="#extract_features-174"><span class="linenos">174</span></a><span class="sd">    ------</span>
-</span><span id="extract_features-175"><a href="#extract_features-175"><span class="linenos">175</span></a><span class="sd">    ValueError</span>
-</span><span id="extract_features-176"><a href="#extract_features-176"><span class="linenos">176</span></a><span class="sd">        If `files` is empty.</span>
-</span><span id="extract_features-177"><a href="#extract_features-177"><span class="linenos">177</span></a><span class="sd">    """</span>
-</span><span id="extract_features-178"><a href="#extract_features-178"><span class="linenos">178</span></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">files</span><span class="p">:</span>
-</span><span id="extract_features-179"><a href="#extract_features-179"><span class="linenos">179</span></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"No files given"</span><span class="p">)</span>
-</span><span id="extract_features-180"><a href="#extract_features-180"><span class="linenos">180</span></a>    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span id="extract_features-181"><a href="#extract_features-181"><span class="linenos">181</span></a>    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">files</span><span class="p">):</span>
-</span><span id="extract_features-182"><a href="#extract_features-182"><span class="linenos">182</span></a>        <span class="k">try</span><span class="p">:</span>
-</span><span id="extract_features-183"><a href="#extract_features-183"><span class="linenos">183</span></a>            <span class="n">data</span> <span class="o">=</span> <span class="n">load_snapshot</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-</span><span id="extract_features-184"><a href="#extract_features-184"><span class="linenos">184</span></a>        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>  <span class="c1"># truncated or corrupt file: skip it, keep going</span>
-</span><span id="extract_features-185"><a href="#extract_features-185"><span class="linenos">185</span></a>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Skipped </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-</span><span id="extract_features-186"><a href="#extract_features-186"><span class="linenos">186</span></a>            <span class="k">continue</span>
-</span><span id="extract_features-187"><a href="#extract_features-187"><span class="linenos">187</span></a>        <span class="n">row</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"sample"</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span> <span class="s2">"file"</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">)}</span>
-</span><span id="extract_features-188"><a href="#extract_features-188"><span class="linenos">188</span></a>        <span class="n">row</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">snapshot_features</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
-</span><span id="extract_features-189"><a href="#extract_features-189"><span class="linenos">189</span></a>        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
-</span><span id="extract_features-190"><a href="#extract_features-190"><span class="linenos">190</span></a>        
-</span><span id="extract_features-191"><a href="#extract_features-191"><span class="linenos">191</span></a>    <span class="n">features</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">"sample"</span><span class="p">)</span>
-</span><span id="extract_features-192"><a href="#extract_features-192"><span class="linenos">192</span></a>    <span class="k">if</span> <span class="n">save_to</span><span class="p">:</span>
-</span><span id="extract_features-193"><a href="#extract_features-193"><span class="linenos">193</span></a>        <span class="n">features</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">save_to</span><span class="p">)</span>
-</span><span id="extract_features-194"><a href="#extract_features-194"><span class="linenos">194</span></a>    <span class="k">return</span> <span class="n">features</span>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="extract_features-192"><a href="#extract_features-192"><span class="linenos">192</span></a><span class="k">def</span><span class="w"> </span><span class="nf">extract_features</span><span class="p">(</span><span class="n">files</span><span class="p">,</span> <span class="n">save_to</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+</span><span id="extract_features-193"><a href="#extract_features-193"><span class="linenos">193</span></a><span class="w">    </span><span class="sd">"""Build a feature table from a list of snapshot files.</span>
+</span><span id="extract_features-194"><a href="#extract_features-194"><span class="linenos">194</span></a>
+</span><span id="extract_features-195"><a href="#extract_features-195"><span class="linenos">195</span></a><span class="sd">    Parameters</span>
+</span><span id="extract_features-196"><a href="#extract_features-196"><span class="linenos">196</span></a><span class="sd">    ----------</span>
+</span><span id="extract_features-197"><a href="#extract_features-197"><span class="linenos">197</span></a><span class="sd">    files : list of str</span>
+</span><span id="extract_features-198"><a href="#extract_features-198"><span class="linenos">198</span></a><span class="sd">        Snapshot paths in time order, e.g. from `list_snapshot_files`.</span>
+</span><span id="extract_features-199"><a href="#extract_features-199"><span class="linenos">199</span></a><span class="sd">    save_to : str, optional</span>
+</span><span id="extract_features-200"><a href="#extract_features-200"><span class="linenos">200</span></a><span class="sd">        If given, the table is also written to this CSV path.</span>
+</span><span id="extract_features-201"><a href="#extract_features-201"><span class="linenos">201</span></a>
+</span><span id="extract_features-202"><a href="#extract_features-202"><span class="linenos">202</span></a><span class="sd">    Returns</span>
+</span><span id="extract_features-203"><a href="#extract_features-203"><span class="linenos">203</span></a><span class="sd">    -------</span>
+</span><span id="extract_features-204"><a href="#extract_features-204"><span class="linenos">204</span></a><span class="sd">    pandas.DataFrame</span>
+</span><span id="extract_features-205"><a href="#extract_features-205"><span class="linenos">205</span></a><span class="sd">        One row per snapshot, indexed by ``sample`` (0, 1, 2, ...), with a</span>
+</span><span id="extract_features-206"><a href="#extract_features-206"><span class="linenos">206</span></a><span class="sd">        ``file`` column and the feature columns from `snapshot_features`.</span>
+</span><span id="extract_features-207"><a href="#extract_features-207"><span class="linenos">207</span></a>
+</span><span id="extract_features-208"><a href="#extract_features-208"><span class="linenos">208</span></a><span class="sd">    Raises</span>
+</span><span id="extract_features-209"><a href="#extract_features-209"><span class="linenos">209</span></a><span class="sd">    ------</span>
+</span><span id="extract_features-210"><a href="#extract_features-210"><span class="linenos">210</span></a><span class="sd">    ValueError</span>
+</span><span id="extract_features-211"><a href="#extract_features-211"><span class="linenos">211</span></a><span class="sd">        If `files` is empty.</span>
+</span><span id="extract_features-212"><a href="#extract_features-212"><span class="linenos">212</span></a>
+</span><span id="extract_features-213"><a href="#extract_features-213"><span class="linenos">213</span></a><span class="sd">    Notes</span>
+</span><span id="extract_features-214"><a href="#extract_features-214"><span class="linenos">214</span></a><span class="sd">    -----</span>
+</span><span id="extract_features-215"><a href="#extract_features-215"><span class="linenos">215</span></a><span class="sd">    Files that cannot be read (e.g. truncated during download) are skipped</span>
+</span><span id="extract_features-216"><a href="#extract_features-216"><span class="linenos">216</span></a><span class="sd">    with a printed message, so their ``sample`` numbers are missing.</span>
+</span><span id="extract_features-217"><a href="#extract_features-217"><span class="linenos">217</span></a><span class="sd">    """</span>
+</span><span id="extract_features-218"><a href="#extract_features-218"><span class="linenos">218</span></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">files</span><span class="p">:</span>
+</span><span id="extract_features-219"><a href="#extract_features-219"><span class="linenos">219</span></a>        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"No files given"</span><span class="p">)</span>
+</span><span id="extract_features-220"><a href="#extract_features-220"><span class="linenos">220</span></a>    <span class="n">rows</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span id="extract_features-221"><a href="#extract_features-221"><span class="linenos">221</span></a>    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">path</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">files</span><span class="p">):</span>
+</span><span id="extract_features-222"><a href="#extract_features-222"><span class="linenos">222</span></a>        <span class="k">try</span><span class="p">:</span>
+</span><span id="extract_features-223"><a href="#extract_features-223"><span class="linenos">223</span></a>            <span class="n">data</span> <span class="o">=</span> <span class="n">load_snapshot</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+</span><span id="extract_features-224"><a href="#extract_features-224"><span class="linenos">224</span></a>        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>  <span class="c1"># truncated or corrupt file: skip it, keep going</span>
+</span><span id="extract_features-225"><a href="#extract_features-225"><span class="linenos">225</span></a>            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Skipped </span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">err</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span id="extract_features-226"><a href="#extract_features-226"><span class="linenos">226</span></a>            <span class="k">continue</span>
+</span><span id="extract_features-227"><a href="#extract_features-227"><span class="linenos">227</span></a>        <span class="n">row</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"sample"</span><span class="p">:</span> <span class="n">i</span><span class="p">,</span> <span class="s2">"file"</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path</span><span class="p">)}</span>
+</span><span id="extract_features-228"><a href="#extract_features-228"><span class="linenos">228</span></a>        <span class="n">row</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">snapshot_features_fast</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+</span><span id="extract_features-229"><a href="#extract_features-229"><span class="linenos">229</span></a>        <span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+</span><span id="extract_features-230"><a href="#extract_features-230"><span class="linenos">230</span></a>    <span class="n">features</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s2">"sample"</span><span class="p">)</span>
+</span><span id="extract_features-231"><a href="#extract_features-231"><span class="linenos">231</span></a>    <span class="k">if</span> <span class="n">save_to</span><span class="p">:</span>
+</span><span id="extract_features-232"><a href="#extract_features-232"><span class="linenos">232</span></a>        <span class="n">features</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">save_to</span><span class="p">)</span>
+</span><span id="extract_features-233"><a href="#extract_features-233"><span class="linenos">233</span></a>    <span class="k">return</span> <span class="n">features</span>
 </span></pre></div>
 
 
@@ -691,6 +805,11 @@ save_to : str, optional
 
 <p>ValueError
     If <code>files</code> is empty.</p>
+
+<h2 id="notes">Notes</h2>
+
+<p>Files that cannot be read (e.g. truncated during download) are skipped
+with a printed message, so their <code>sample</code> numbers are missing.</p>
 </div>
 
 

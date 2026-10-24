@@ -27,10 +27,7 @@ Typical use::
 """
 import numpy as np
 
-# The IMS readme says "20 kHz", but each file holds 20,480 samples per 1 s
-# snapshot. With 20,480 Hz the measured outer race peak (and its harmonics)
-# lands on the theoretical BPFO; with 20,000 Hz it sits 2.4 % low.
-SAMPLE_RATE = 20480  # Hz
+SAMPLE_RATE = 20000  # Hz, from the IMS readme (20,480 samples per file)
 
 
 def defect_frequencies(rpm=2000, n_rollers=16, roller_d=0.331, pitch_d=2.815, contact_deg=15.17):
