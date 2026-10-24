@@ -55,4 +55,4 @@ tests/test_trends.py::test_choose_k_avoids_extremes PASSED               [ 95%]
 tests/test_trends.py::test_health_stages_rise_and_never_drop PASSED      [ 97%]
 tests/test_trends.py::test_remaining_life_ends_at_zero PASSED            [100%]
 
-============================== 48 passed in 3.72s ==============================
+============================== 48 passed in 2.20s ==============================
