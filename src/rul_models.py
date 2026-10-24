@@ -584,3 +584,56 @@ def fixed_leave_one_out_by_group(predictions, y, test_group, cap=True):
     key = min(val_mae, key=val_mae.get)
     pred = np.minimum(predictions[key][test_group], limit)
     return {"settings": key, "val_MAE_h": val_mae[key], **rul_scores(y[test_group], pred)}, pred
+
+
+def safety_margin(y_true, y_pred, late_target=0.1):
+    """Hours to subtract from predictions so only `late_target` of them are late.
+
+    The margin is the ``1 - late_target`` quantile of the prediction errors
+    (predicted minus true RUL) on validation data, never negative. Use it
+    with `apply_margin` on new predictions; never calibrate on test data.
+
+    Parameters
+    ----------
+    y_true, y_pred : array_like
+        True and predicted RUL (hours) on validation data.
+    late_target : float, optional
+        Acceptable share of late predictions, e.g. 0.1 for 10 %.
+
+    Returns
+    -------
+    float
+        Margin in hours.
+    """
+    err = np.asarray(y_pred, dtype=float) - np.asarray(y_true, dtype=float)
+    return max(0.0, float(np.quantile(err, 1 - late_target)))
+
+
+def apply_margin(y_pred, margin):
+    """Subtract a safety margin from RUL predictions, keeping them >= 0."""
+    return np.clip(np.asarray(y_pred, dtype=float) - margin, 0, None)
+
+
+def inner_validation_predictions(make_model, settings, features, y, test_group, clip=True):
+    """Validation predictions from the inner swaps of `leave_one_out_by_group`.
+
+    Each training group is predicted by a model fitted on the other training
+    groups, with fixed `settings`. The test group is never used.
+
+    Returns
+    -------
+    numpy.ndarray, numpy.ndarray
+        True and predicted RUL, concatenated over the training groups.
+    """
+    train = [g for g in features if g != test_group]
+    kwargs = {k: v for k, v in settings.items() if k != "smooth"}
+    sw = settings["smooth"]
+    trues, preds = [], []
+    for v in train:
+        fit = [g for g in train if g != v]
+        X = np.vstack([features[g][sw] for g in fit])
+        target = np.concatenate([np.asarray(y[g], dtype=float) for g in fit])
+        p = make_model(**kwargs).fit(X, target).predict(features[v][sw])
+        preds.append(np.clip(p, 0, target.max()) if clip else p)
+        trues.append(np.asarray(y[v], dtype=float))
+    return np.concatenate(trues), np.concatenate(preds)

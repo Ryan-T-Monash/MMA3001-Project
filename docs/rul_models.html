@@ -108,6 +108,15 @@
             <li>
                     <a class="function" href="#fixed_leave_one_out_by_group">fixed_leave_one_out_by_group</a>
             </li>
+            <li>
+                    <a class="function" href="#safety_margin">safety_margin</a>
+            </li>
+            <li>
+                    <a class="function" href="#apply_margin">apply_margin</a>
+            </li>
+            <li>
+                    <a class="function" href="#inner_validation_predictions">inner_validation_predictions</a>
+            </li>
     </ul>
 
 
@@ -754,6 +763,59 @@ baseline they are all compared against.</p>
 </span><span id="L-584"><a href="#L-584"><span class="linenos">584</span></a>    <span class="n">key</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">val_mae</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="n">val_mae</span><span class="o">.</span><span class="n">get</span><span class="p">)</span>
 </span><span id="L-585"><a href="#L-585"><span class="linenos">585</span></a>    <span class="n">pred</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">predictions</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">test_group</span><span class="p">],</span> <span class="n">limit</span><span class="p">)</span>
 </span><span id="L-586"><a href="#L-586"><span class="linenos">586</span></a>    <span class="k">return</span> <span class="p">{</span><span class="s2">"settings"</span><span class="p">:</span> <span class="n">key</span><span class="p">,</span> <span class="s2">"val_MAE_h"</span><span class="p">:</span> <span class="n">val_mae</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="o">**</span><span class="n">rul_scores</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">test_group</span><span class="p">],</span> <span class="n">pred</span><span class="p">)},</span> <span class="n">pred</span>
+</span><span id="L-587"><a href="#L-587"><span class="linenos">587</span></a>
+</span><span id="L-588"><a href="#L-588"><span class="linenos">588</span></a>
+</span><span id="L-589"><a href="#L-589"><span class="linenos">589</span></a><span class="k">def</span><span class="w"> </span><span class="nf">safety_margin</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">late_target</span><span class="o">=</span><span class="mf">0.1</span><span class="p">):</span>
+</span><span id="L-590"><a href="#L-590"><span class="linenos">590</span></a><span class="w">    </span><span class="sd">"""Hours to subtract from predictions so only `late_target` of them are late.</span>
+</span><span id="L-591"><a href="#L-591"><span class="linenos">591</span></a>
+</span><span id="L-592"><a href="#L-592"><span class="linenos">592</span></a><span class="sd">    The margin is the ``1 - late_target`` quantile of the prediction errors</span>
+</span><span id="L-593"><a href="#L-593"><span class="linenos">593</span></a><span class="sd">    (predicted minus true RUL) on validation data, never negative. Use it</span>
+</span><span id="L-594"><a href="#L-594"><span class="linenos">594</span></a><span class="sd">    with `apply_margin` on new predictions; never calibrate on test data.</span>
+</span><span id="L-595"><a href="#L-595"><span class="linenos">595</span></a>
+</span><span id="L-596"><a href="#L-596"><span class="linenos">596</span></a><span class="sd">    Parameters</span>
+</span><span id="L-597"><a href="#L-597"><span class="linenos">597</span></a><span class="sd">    ----------</span>
+</span><span id="L-598"><a href="#L-598"><span class="linenos">598</span></a><span class="sd">    y_true, y_pred : array_like</span>
+</span><span id="L-599"><a href="#L-599"><span class="linenos">599</span></a><span class="sd">        True and predicted RUL (hours) on validation data.</span>
+</span><span id="L-600"><a href="#L-600"><span class="linenos">600</span></a><span class="sd">    late_target : float, optional</span>
+</span><span id="L-601"><a href="#L-601"><span class="linenos">601</span></a><span class="sd">        Acceptable share of late predictions, e.g. 0.1 for 10 %.</span>
+</span><span id="L-602"><a href="#L-602"><span class="linenos">602</span></a>
+</span><span id="L-603"><a href="#L-603"><span class="linenos">603</span></a><span class="sd">    Returns</span>
+</span><span id="L-604"><a href="#L-604"><span class="linenos">604</span></a><span class="sd">    -------</span>
+</span><span id="L-605"><a href="#L-605"><span class="linenos">605</span></a><span class="sd">    float</span>
+</span><span id="L-606"><a href="#L-606"><span class="linenos">606</span></a><span class="sd">        Margin in hours.</span>
+</span><span id="L-607"><a href="#L-607"><span class="linenos">607</span></a><span class="sd">    """</span>
+</span><span id="L-608"><a href="#L-608"><span class="linenos">608</span></a>    <span class="n">err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+</span><span id="L-609"><a href="#L-609"><span class="linenos">609</span></a>    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">err</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">late_target</span><span class="p">)))</span>
+</span><span id="L-610"><a href="#L-610"><span class="linenos">610</span></a>
+</span><span id="L-611"><a href="#L-611"><span class="linenos">611</span></a>
+</span><span id="L-612"><a href="#L-612"><span class="linenos">612</span></a><span class="k">def</span><span class="w"> </span><span class="nf">apply_margin</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">margin</span><span class="p">):</span>
+</span><span id="L-613"><a href="#L-613"><span class="linenos">613</span></a><span class="w">    </span><span class="sd">"""Subtract a safety margin from RUL predictions, keeping them &gt;= 0."""</span>
+</span><span id="L-614"><a href="#L-614"><span class="linenos">614</span></a>    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="o">-</span> <span class="n">margin</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span id="L-615"><a href="#L-615"><span class="linenos">615</span></a>
+</span><span id="L-616"><a href="#L-616"><span class="linenos">616</span></a>
+</span><span id="L-617"><a href="#L-617"><span class="linenos">617</span></a><span class="k">def</span><span class="w"> </span><span class="nf">inner_validation_predictions</span><span class="p">(</span><span class="n">make_model</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_group</span><span class="p">,</span> <span class="n">clip</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+</span><span id="L-618"><a href="#L-618"><span class="linenos">618</span></a><span class="w">    </span><span class="sd">"""Validation predictions from the inner swaps of `leave_one_out_by_group`.</span>
+</span><span id="L-619"><a href="#L-619"><span class="linenos">619</span></a>
+</span><span id="L-620"><a href="#L-620"><span class="linenos">620</span></a><span class="sd">    Each training group is predicted by a model fitted on the other training</span>
+</span><span id="L-621"><a href="#L-621"><span class="linenos">621</span></a><span class="sd">    groups, with fixed `settings`. The test group is never used.</span>
+</span><span id="L-622"><a href="#L-622"><span class="linenos">622</span></a>
+</span><span id="L-623"><a href="#L-623"><span class="linenos">623</span></a><span class="sd">    Returns</span>
+</span><span id="L-624"><a href="#L-624"><span class="linenos">624</span></a><span class="sd">    -------</span>
+</span><span id="L-625"><a href="#L-625"><span class="linenos">625</span></a><span class="sd">    numpy.ndarray, numpy.ndarray</span>
+</span><span id="L-626"><a href="#L-626"><span class="linenos">626</span></a><span class="sd">        True and predicted RUL, concatenated over the training groups.</span>
+</span><span id="L-627"><a href="#L-627"><span class="linenos">627</span></a><span class="sd">    """</span>
+</span><span id="L-628"><a href="#L-628"><span class="linenos">628</span></a>    <span class="n">train</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">features</span> <span class="k">if</span> <span class="n">g</span> <span class="o">!=</span> <span class="n">test_group</span><span class="p">]</span>
+</span><span id="L-629"><a href="#L-629"><span class="linenos">629</span></a>    <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">settings</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s2">"smooth"</span><span class="p">}</span>
+</span><span id="L-630"><a href="#L-630"><span class="linenos">630</span></a>    <span class="n">sw</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="s2">"smooth"</span><span class="p">]</span>
+</span><span id="L-631"><a href="#L-631"><span class="linenos">631</span></a>    <span class="n">trues</span><span class="p">,</span> <span class="n">preds</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+</span><span id="L-632"><a href="#L-632"><span class="linenos">632</span></a>    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">train</span><span class="p">:</span>
+</span><span id="L-633"><a href="#L-633"><span class="linenos">633</span></a>        <span class="n">fit</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">train</span> <span class="k">if</span> <span class="n">g</span> <span class="o">!=</span> <span class="n">v</span><span class="p">]</span>
+</span><span id="L-634"><a href="#L-634"><span class="linenos">634</span></a>        <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">features</span><span class="p">[</span><span class="n">g</span><span class="p">][</span><span class="n">sw</span><span class="p">]</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">fit</span><span class="p">])</span>
+</span><span id="L-635"><a href="#L-635"><span class="linenos">635</span></a>        <span class="n">target</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">g</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">fit</span><span class="p">])</span>
+</span><span id="L-636"><a href="#L-636"><span class="linenos">636</span></a>        <span class="n">p</span> <span class="o">=</span> <span class="n">make_model</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">features</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">sw</span><span class="p">])</span>
+</span><span id="L-637"><a href="#L-637"><span class="linenos">637</span></a>        <span class="n">preds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">max</span><span class="p">())</span> <span class="k">if</span> <span class="n">clip</span> <span class="k">else</span> <span class="n">p</span><span class="p">)</span>
+</span><span id="L-638"><a href="#L-638"><span class="linenos">638</span></a>        <span class="n">trues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">v</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+</span><span id="L-639"><a href="#L-639"><span class="linenos">639</span></a>    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">trues</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">preds</span><span class="p">)</span>
 </span></pre></div>
 
 
@@ -1877,6 +1939,134 @@ cap : bool, optional
     <code>settings</code>, <code>val_MAE_h</code> (mean over training groups) and test scores.
 numpy.ndarray
     Predicted RUL for the test group.</p>
+</div>
+
+
+                </section>
+                <section id="safety_margin">
+                            <input id="safety_margin-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">safety_margin</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">y_true</span>, </span><span class="param"><span class="n">y_pred</span>, </span><span class="param"><span class="n">late_target</span><span class="o">=</span><span class="mf">0.1</span></span><span class="return-annotation">):</span></span>
+
+                <label class="view-source-button" for="safety_margin-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#safety_margin"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="safety_margin-590"><a href="#safety_margin-590"><span class="linenos">590</span></a><span class="k">def</span><span class="w"> </span><span class="nf">safety_margin</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">late_target</span><span class="o">=</span><span class="mf">0.1</span><span class="p">):</span>
+</span><span id="safety_margin-591"><a href="#safety_margin-591"><span class="linenos">591</span></a><span class="w">    </span><span class="sd">"""Hours to subtract from predictions so only `late_target` of them are late.</span>
+</span><span id="safety_margin-592"><a href="#safety_margin-592"><span class="linenos">592</span></a>
+</span><span id="safety_margin-593"><a href="#safety_margin-593"><span class="linenos">593</span></a><span class="sd">    The margin is the ``1 - late_target`` quantile of the prediction errors</span>
+</span><span id="safety_margin-594"><a href="#safety_margin-594"><span class="linenos">594</span></a><span class="sd">    (predicted minus true RUL) on validation data, never negative. Use it</span>
+</span><span id="safety_margin-595"><a href="#safety_margin-595"><span class="linenos">595</span></a><span class="sd">    with `apply_margin` on new predictions; never calibrate on test data.</span>
+</span><span id="safety_margin-596"><a href="#safety_margin-596"><span class="linenos">596</span></a>
+</span><span id="safety_margin-597"><a href="#safety_margin-597"><span class="linenos">597</span></a><span class="sd">    Parameters</span>
+</span><span id="safety_margin-598"><a href="#safety_margin-598"><span class="linenos">598</span></a><span class="sd">    ----------</span>
+</span><span id="safety_margin-599"><a href="#safety_margin-599"><span class="linenos">599</span></a><span class="sd">    y_true, y_pred : array_like</span>
+</span><span id="safety_margin-600"><a href="#safety_margin-600"><span class="linenos">600</span></a><span class="sd">        True and predicted RUL (hours) on validation data.</span>
+</span><span id="safety_margin-601"><a href="#safety_margin-601"><span class="linenos">601</span></a><span class="sd">    late_target : float, optional</span>
+</span><span id="safety_margin-602"><a href="#safety_margin-602"><span class="linenos">602</span></a><span class="sd">        Acceptable share of late predictions, e.g. 0.1 for 10 %.</span>
+</span><span id="safety_margin-603"><a href="#safety_margin-603"><span class="linenos">603</span></a>
+</span><span id="safety_margin-604"><a href="#safety_margin-604"><span class="linenos">604</span></a><span class="sd">    Returns</span>
+</span><span id="safety_margin-605"><a href="#safety_margin-605"><span class="linenos">605</span></a><span class="sd">    -------</span>
+</span><span id="safety_margin-606"><a href="#safety_margin-606"><span class="linenos">606</span></a><span class="sd">    float</span>
+</span><span id="safety_margin-607"><a href="#safety_margin-607"><span class="linenos">607</span></a><span class="sd">        Margin in hours.</span>
+</span><span id="safety_margin-608"><a href="#safety_margin-608"><span class="linenos">608</span></a><span class="sd">    """</span>
+</span><span id="safety_margin-609"><a href="#safety_margin-609"><span class="linenos">609</span></a>    <span class="n">err</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+</span><span id="safety_margin-610"><a href="#safety_margin-610"><span class="linenos">610</span></a>    <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">quantile</span><span class="p">(</span><span class="n">err</span><span class="p">,</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">late_target</span><span class="p">)))</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Hours to subtract from predictions so only <code>late_target</code> of them are late.</p>
+
+<p>The margin is the <code>1 - late_target</code> quantile of the prediction errors
+(predicted minus true RUL) on validation data, never negative. Use it
+with <code><a href="#apply_margin">apply_margin</a></code> on new predictions; never calibrate on test data.</p>
+
+<h2 id="parameters">Parameters</h2>
+
+<p>y_true, y_pred : array_like
+    True and predicted RUL (hours) on validation data.
+late_target : float, optional
+    Acceptable share of late predictions, e.g. 0.1 for 10 %.</p>
+
+<h2 id="returns">Returns</h2>
+
+<p>float
+    Margin in hours.</p>
+</div>
+
+
+                </section>
+                <section id="apply_margin">
+                            <input id="apply_margin-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">apply_margin</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">y_pred</span>, </span><span class="param"><span class="n">margin</span></span><span class="return-annotation">):</span></span>
+
+                <label class="view-source-button" for="apply_margin-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#apply_margin"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="apply_margin-613"><a href="#apply_margin-613"><span class="linenos">613</span></a><span class="k">def</span><span class="w"> </span><span class="nf">apply_margin</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">margin</span><span class="p">):</span>
+</span><span id="apply_margin-614"><a href="#apply_margin-614"><span class="linenos">614</span></a><span class="w">    </span><span class="sd">"""Subtract a safety margin from RUL predictions, keeping them &gt;= 0."""</span>
+</span><span id="apply_margin-615"><a href="#apply_margin-615"><span class="linenos">615</span></a>    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y_pred</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="o">-</span> <span class="n">margin</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Subtract a safety margin from RUL predictions, keeping them &gt;= 0.</p>
+</div>
+
+
+                </section>
+                <section id="inner_validation_predictions">
+                            <input id="inner_validation_predictions-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
+<div class="attr function">
+            
+        <span class="def">def</span>
+        <span class="name">inner_validation_predictions</span><span class="signature pdoc-code condensed">(<span class="param"><span class="n">make_model</span>, </span><span class="param"><span class="n">settings</span>, </span><span class="param"><span class="n">features</span>, </span><span class="param"><span class="n">y</span>, </span><span class="param"><span class="n">test_group</span>, </span><span class="param"><span class="n">clip</span><span class="o">=</span><span class="kc">True</span></span><span class="return-annotation">):</span></span>
+
+                <label class="view-source-button" for="inner_validation_predictions-view-source"><span>View Source</span></label>
+
+    </div>
+    <a class="headerlink" href="#inner_validation_predictions"></a>
+            <div class="pdoc-code codehilite"><pre><span></span><span id="inner_validation_predictions-618"><a href="#inner_validation_predictions-618"><span class="linenos">618</span></a><span class="k">def</span><span class="w"> </span><span class="nf">inner_validation_predictions</span><span class="p">(</span><span class="n">make_model</span><span class="p">,</span> <span class="n">settings</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">test_group</span><span class="p">,</span> <span class="n">clip</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+</span><span id="inner_validation_predictions-619"><a href="#inner_validation_predictions-619"><span class="linenos">619</span></a><span class="w">    </span><span class="sd">"""Validation predictions from the inner swaps of `leave_one_out_by_group`.</span>
+</span><span id="inner_validation_predictions-620"><a href="#inner_validation_predictions-620"><span class="linenos">620</span></a>
+</span><span id="inner_validation_predictions-621"><a href="#inner_validation_predictions-621"><span class="linenos">621</span></a><span class="sd">    Each training group is predicted by a model fitted on the other training</span>
+</span><span id="inner_validation_predictions-622"><a href="#inner_validation_predictions-622"><span class="linenos">622</span></a><span class="sd">    groups, with fixed `settings`. The test group is never used.</span>
+</span><span id="inner_validation_predictions-623"><a href="#inner_validation_predictions-623"><span class="linenos">623</span></a>
+</span><span id="inner_validation_predictions-624"><a href="#inner_validation_predictions-624"><span class="linenos">624</span></a><span class="sd">    Returns</span>
+</span><span id="inner_validation_predictions-625"><a href="#inner_validation_predictions-625"><span class="linenos">625</span></a><span class="sd">    -------</span>
+</span><span id="inner_validation_predictions-626"><a href="#inner_validation_predictions-626"><span class="linenos">626</span></a><span class="sd">    numpy.ndarray, numpy.ndarray</span>
+</span><span id="inner_validation_predictions-627"><a href="#inner_validation_predictions-627"><span class="linenos">627</span></a><span class="sd">        True and predicted RUL, concatenated over the training groups.</span>
+</span><span id="inner_validation_predictions-628"><a href="#inner_validation_predictions-628"><span class="linenos">628</span></a><span class="sd">    """</span>
+</span><span id="inner_validation_predictions-629"><a href="#inner_validation_predictions-629"><span class="linenos">629</span></a>    <span class="n">train</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">features</span> <span class="k">if</span> <span class="n">g</span> <span class="o">!=</span> <span class="n">test_group</span><span class="p">]</span>
+</span><span id="inner_validation_predictions-630"><a href="#inner_validation_predictions-630"><span class="linenos">630</span></a>    <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">settings</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="s2">"smooth"</span><span class="p">}</span>
+</span><span id="inner_validation_predictions-631"><a href="#inner_validation_predictions-631"><span class="linenos">631</span></a>    <span class="n">sw</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="s2">"smooth"</span><span class="p">]</span>
+</span><span id="inner_validation_predictions-632"><a href="#inner_validation_predictions-632"><span class="linenos">632</span></a>    <span class="n">trues</span><span class="p">,</span> <span class="n">preds</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+</span><span id="inner_validation_predictions-633"><a href="#inner_validation_predictions-633"><span class="linenos">633</span></a>    <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">train</span><span class="p">:</span>
+</span><span id="inner_validation_predictions-634"><a href="#inner_validation_predictions-634"><span class="linenos">634</span></a>        <span class="n">fit</span> <span class="o">=</span> <span class="p">[</span><span class="n">g</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">train</span> <span class="k">if</span> <span class="n">g</span> <span class="o">!=</span> <span class="n">v</span><span class="p">]</span>
+</span><span id="inner_validation_predictions-635"><a href="#inner_validation_predictions-635"><span class="linenos">635</span></a>        <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">features</span><span class="p">[</span><span class="n">g</span><span class="p">][</span><span class="n">sw</span><span class="p">]</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">fit</span><span class="p">])</span>
+</span><span id="inner_validation_predictions-636"><a href="#inner_validation_predictions-636"><span class="linenos">636</span></a>        <span class="n">target</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">g</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="k">for</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">fit</span><span class="p">])</span>
+</span><span id="inner_validation_predictions-637"><a href="#inner_validation_predictions-637"><span class="linenos">637</span></a>        <span class="n">p</span> <span class="o">=</span> <span class="n">make_model</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">features</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">sw</span><span class="p">])</span>
+</span><span id="inner_validation_predictions-638"><a href="#inner_validation_predictions-638"><span class="linenos">638</span></a>        <span class="n">preds</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">target</span><span class="o">.</span><span class="n">max</span><span class="p">())</span> <span class="k">if</span> <span class="n">clip</span> <span class="k">else</span> <span class="n">p</span><span class="p">)</span>
+</span><span id="inner_validation_predictions-639"><a href="#inner_validation_predictions-639"><span class="linenos">639</span></a>        <span class="n">trues</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y</span><span class="p">[</span><span class="n">v</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+</span><span id="inner_validation_predictions-640"><a href="#inner_validation_predictions-640"><span class="linenos">640</span></a>    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">trues</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">preds</span><span class="p">)</span>
+</span></pre></div>
+
+
+            <div class="docstring"><p>Validation predictions from the inner swaps of <code><a href="#leave_one_out_by_group">leave_one_out_by_group</a></code>.</p>
+
+<p>Each training group is predicted by a model fitted on the other training
+groups, with fixed <code>settings</code>. The test group is never used.</p>
+
+<h2 id="returns">Returns</h2>
+
+<p>numpy.ndarray, numpy.ndarray
+    True and predicted RUL, concatenated over the training groups.</p>
 </div>
 
 
