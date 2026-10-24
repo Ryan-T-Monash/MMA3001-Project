@@ -188,7 +188,7 @@ The tests use inputs with known exact answers, not real data. For example: the R
 
 Values are mean absolute error in hours. Unseen-bearing columns cover the final 164 h of test 1 bearings 3 and 4. SVR is selected because the intended use is bearings the model has not seen. Linear regression is best only for forecasting the same bearing it was trained on.
 
-**Performance:** rewriting the trend extrapolation with running sums made it **428× faster** (86 ms to 0.2 ms per setting) with identical results. Vectorising the feature maths gained only 1.05× on Colab, because reading files from Drive dominates the run time.
+**Performance:** rewriting the trend extrapolation with running sums made it **440× faster** (85.8 ms to 0.195 ms per setting) with identical results. Vectorising the feature maths gained only 1.05× on Colab, because reading files from Drive dominates the run time.
 
 ## Limitations
 
