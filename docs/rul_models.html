@@ -155,7 +155,7 @@ baseline they are all compared against.</p>
     (predicted RUL longer than the true RUL), which are the dangerous ones
     because maintenance would be scheduled after the failure. Settings are
     chosen on validation snapshots and the test snapshots are scored once
-    (<code><a href="#tune_and_test">tune_and_test</a></code>, <code><a href="#tune_fixed">tune_fixed</a></code>); the splits themselves are in <code>splits</code>.</p>
+    (<code><a href="#tune_and_test">tune_and_test</a></code>, <code><a href="#tune_fixed">tune_fixed</a></code>); the splits themselves are in <code><a href="splits.html">splits</a></code>.</p>
 </div>
 
                         <input id="mod-rul_models-view-source" class="view-source-toggle-state" type="checkbox" aria-hidden="true" tabindex="-1">
@@ -1412,7 +1412,7 @@ y : array_like
     True RUL (hours) for all snapshots.
 roles : array_like of str
     <code>"train"</code>, <code>"val"</code>, <code>"test"</code> or <code>"gap"</code> per snapshot
-    (see <code>splits</code>).
+    (see <code><a href="splits.html">splits</a></code>).
 clip : bool, optional
     Physical constraint: keep predictions between 0 (RUL cannot be
     negative) and the longest RUL seen in training. Applied when
