@@ -4,10 +4,16 @@ The test data are exact (noise-free) curves with known answers.
 """
 import numpy as np
 import pytest
+from sklearn.linear_model import LinearRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeRegressor
 
 from rul_models import (candidate_models, catalogue_life_hours, catalogue_rul,
                         compare_models, complexity_curve, extrapolate_rul,
+                        extrapolate_rul_fast, fixed_validation_curve, validation_curve,
+                        leave_one_out_by_group, fixed_leave_one_out_by_group,
+                        safety_margin, apply_margin, inner_validation_predictions,
                         failure_probability, life_at_reliability, rul_scores,
                         tune_and_test, tune_fixed,
                         trailing_mean)
@@ -106,3 +112,68 @@ def test_tune_fixed_chooses_lowest_validation_error_and_caps():
     assert row["settings"] == "exact" and row["MAE_h"] == 0
     capped, _ = tune_fixed({"too long": y + 1000}, y, roles)
     assert capped["late_%"] == 100 and capped["MAE_h"] <= y[:300].max()
+
+
+def test_tune_and_test_clips_to_physical_range():
+    X = T.reshape(-1, 1)
+    y = T[-1] - T
+    roles = np.repeat(["train", "val", "test"], [300, 150, T.size - 450])
+    grid = [{"smooth": 1}]
+    make = lambda: make_pipeline(StandardScaler(), LinearRegression())
+    _, pred = tune_and_test(make, grid, {1: X + 0.01 * X ** 2}, y, roles)
+    assert pred.min() >= 0 and pred.max() <= y[:300].max()
+    _, raw = tune_and_test(make, grid, {1: X + 0.01 * X ** 2}, y, roles, clip=False)
+    assert raw.min() < 0                  # unclipped straight line overshoots
+
+
+@pytest.mark.parametrize("log", [False, True])
+def test_fast_extrapolation_matches_loop_version(log):
+    # rising and falling trend so every branch (crossing, no crossing, past threshold) is used
+    y = 1 + 0.02 * T + 0.3 * np.sin(T / 3)
+    for window in (2, 10, 40):
+        slow = extrapolate_rul(T, y, threshold=2.5, window=window, log=log, max_rul=300)
+        fast = extrapolate_rul_fast(T, y, threshold=2.5, window=window, log=log, max_rul=300)
+        assert np.allclose(fast, slow, atol=1e-6)
+
+
+def test_validation_curves_report_every_setting():
+    X = T.reshape(-1, 1)
+    y = T[-1] - T
+    roles = np.repeat(["train", "val", "test"], [300, 150, T.size - 450])
+    grid = [{"smooth": 1, "max_depth": d} for d in (1, 3)]
+    curve = validation_curve(lambda max_depth: DecisionTreeRegressor(max_depth=max_depth),
+                             grid, {1: X}, y, roles)
+    assert list(curve["max_depth"]) == [1, 3] and np.all(curve["fit_ms"] >= 0)
+    fixed = fixed_validation_curve({(1, 5): y, (1, 9): y + 10}, y, roles, ["smooth", "window_h"])
+    assert list(fixed["val_MAE_h"]) == [0, 10]
+
+
+def test_leave_one_out_never_uses_test_group_to_choose():
+    # three "bearings" sharing the same exact RUL = 100 - 10 * feature relation
+    groups = {g: np.linspace(0, 10, 50) + 0.01 * i for i, g in enumerate("abc")}
+    features = {g: {1: x.reshape(-1, 1)} for g, x in groups.items()}
+    y = {g: 100 - 10 * x for g, x in groups.items()}
+    grid = [{"smooth": 1, "max_depth": d} for d in (1, 8)]
+    row, pred = leave_one_out_by_group(lambda max_depth: DecisionTreeRegressor(max_depth=max_depth),
+                                       grid, features, y, "c")
+    assert row["max_depth"] == 8 and pred.size == 50 and row["MAE_h"] < 2
+    fixed, _ = fixed_leave_one_out_by_group({"exact": y, "late": {g: v + 5 for g, v in y.items()}}, y, "c")
+    assert fixed["settings"] == "exact" and fixed["MAE_h"] == 0
+
+
+def test_safety_margin_meets_late_target():
+    y = np.arange(100.0)
+    pred = y + np.linspace(-20, 20, 100)       # half late before the margin
+    m = safety_margin(y, pred, late_target=0.1)
+    assert np.mean(apply_margin(pred, m) > y) <= 0.1
+    assert safety_margin(y, y - 5) == 0         # already early: no margin
+    assert apply_margin([3.0], 10)[0] == 0      # never negative
+
+
+def test_inner_validation_skips_test_group():
+    groups = {g: np.linspace(0, 10, 20) for g in "abc"}
+    features = {g: {1: x.reshape(-1, 1)} for g, x in groups.items()}
+    y = {g: 100 - 10 * x for g, x in groups.items()}
+    true, pred = inner_validation_predictions(lambda: LinearRegression(), {"smooth": 1},
+                                              features, y, "c")
+    assert true.size == 40 and np.allclose(pred, true)
