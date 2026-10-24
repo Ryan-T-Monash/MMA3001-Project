@@ -5,7 +5,7 @@ Author: Ryan · Data: NASA/IMS bearing run-to-failure dataset · Language: Pytho
 
 This repository predicts **how many operating hours a rolling element bearing has left** (its remaining useful life, RUL) from the vibration it produces. It compares that prediction against the manufacturer's catalogue rating life (L10). Every result in the project report can be regenerated from the code and notebooks here.
 
-**Headline result.** On the test bearing, which failed after 164 h, the catalogue L10 (1571 h) was wrong by about 1400 h. Vibration-based models were wrong by 15 to 80 h. On bearings the models had never seen, support vector regression (SVR) trained on two bearings was the most accurate (61.7 h), beating a "predict the average" baseline by 61%. All models are still late too often to be used without a safety margin (see [Limitations](#limitations)).
+**Headline result.** On the test bearing, which failed after 164 h, the catalogue L10 (1571 h) was wrong by about 1400 h. Vibration-based models were wrong by 15 to 80 h. On bearings the models had never seen, support vector regression (SVR) trained on two bearings was the most accurate (61.7 h), beating a "predict the average" baseline by 61%. Adding a fourth bearing (test 3), SVR was the only model whose error fell (186 h to 144 h), and it predicted the new bearing best (111 h against 191 h for the baseline). All models are still late too often to be used without a safety margin (see [Limitations](#limitations)).
 
 ---
 
@@ -50,7 +50,7 @@ Rolling element bearings are in almost every rotating machine, from pumps and ge
 | --- | --- | --- | --- | --- |
 | 2nd_test | 984, every 10 min | 164 h | 4 | Bearing 1, outer race (main development data) |
 | 1st_test | 2156, with gaps | about 830 h | 8 | Bearing 3, inner race (channel 5); bearing 4, roller (channel 7) |
-| 3rd_test | not used | | | The upload was incomplete, so it was left out |
+| 3rd_test | 6324, every 10 min (the IMS readme says 4448) | about 1073 h | 4 | Bearing 3, outer race (channel 3): fourth bearing, Data Analysis cells 20 to 22 |
 
 **The raw data (about 6 GB) is not in this repository.** Download it from the NASA Prognostics Data Repository and put it on Google Drive. The code expects:
 
@@ -161,6 +161,7 @@ Run the cells **in order, top to bottom**. Most cells use variables made by earl
 | | 13 to 16 | Test 1 features (read from `data/`, rebuilt from raw files only if missing), unseen-bearing test, `data/rul_results_unseen_bearing.csv` |
 | | 17 to 18 | Train on two bearings, test on the third, `data/rul_results_leave_one_bearing_out.csv` |
 | | 19 | Safety margin against late predictions, `data/rul_safety_margin.csv` |
+| | 20 to 22 | Test 3 as a fourth bearing (needs Main section 2b once): train on three, test on the fourth, `data/rul_results_four_bearings.csv`, `data/rul_training_bearings_summary_4.csv` |
 
 All tunable settings (smoothing windows, tree depths, SVR C, extrapolation windows, failure thresholds, split ratio, seeds) are in **cell 2** of `Data Analysis.ipynb`.
 
@@ -188,11 +189,13 @@ The tests use inputs with known exact answers, not real data. For example: the R
 
 Values are mean absolute error in hours. Unseen-bearing columns cover the final 164 h of test 1 bearings 3 and 4. SVR is selected because the intended use is bearings the model has not seen. Linear regression is best only for forecasting the same bearing it was trained on.
 
+**Fourth bearing (test 3 bearing 3, outer race, 1073 h).** Trained on the other three bearings, MAE over the final 164 h: SVR 110.7 h, Dummy 191.4 h, linear 201.7 h, tree 216.8 h, trend extrapolation 366.7 h, catalogue L10 497.6 h. Averaged over the three original bearings, going from two to three training bearings changed SVR from 185.8 h to 144.2 h, linear from 201.0 to 204.3 h, the tree from 207.4 to 317.9 h and the Dummy from 184.7 to 359.2 h.
+
 **Performance:** rewriting the trend extrapolation with running sums made it **440× faster** (85.8 ms to 0.195 ms per setting) with identical results. Vectorising the feature maths gained only 1.05× on Colab, because reading files from Drive dominates the run time.
 
 ## Limitations
 
-- Only three failure histories. With one training bearing, no model beat the Dummy on new bearings.
+- Only four failure histories, with three fault types. With one training bearing, no model beat the Dummy on new bearings.
 - 75 to 90% of predictions on new bearings are late. A safety margin is needed before any real use.
 - Bearings under identical conditions lived 164 h and about 830 h. A model trained only on long lives over-predicts short ones.
 - Fixed speed and load; failure time is taken as the end of each test.
