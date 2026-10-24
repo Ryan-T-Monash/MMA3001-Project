@@ -135,7 +135,7 @@ except Exception:
 import sys; sys.path.insert(0, "/content/repo/src")
 ```
 
-Without a `GH_PAT` secret the setup cell still clones the public repository, so you can run everything; you just cannot push. The modelling notebook runs from the CSV files in `data/`, so the raw IMS files are only needed to rebuild features.
+Without a `GH_PAT` secret the setup cell still clones the public repository, so you can run everything; you just cannot push. The modelling notebook runs from the CSV files in `data/`, so the raw IMS files are only needed to rebuild features. In `Main.ipynb`, the data quality, spectrum and performance (P2 to P8) sections read the raw IMS files, so download the NASA IMS data and set `PROJECT` in the setup cell first. Everything in `Data Analysis.ipynb` runs from `data/`.
 
 3. Try the modules:
 
