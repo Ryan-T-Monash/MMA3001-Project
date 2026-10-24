@@ -1,0 +1,8 @@
+model,2 training bearings (mean of 3),3 training bearings (same 3),3 training bearings (test 3 b3),"late %, 3 bearings (mean of 4)"
+SVR,185.84,144.23,110.72,76.31
+catalogue L10,964.55,964.55,497.62,100.0
+catalogue L50,4909.01,4909.01,4442.08,100.0
+linear,201.01,204.28,201.74,87.64
+mean (Dummy),184.71,359.18,191.38,100.0
+tree,207.42,317.9,216.76,97.31
+trend extrapolation,374.72,482.66,366.69,68.66
